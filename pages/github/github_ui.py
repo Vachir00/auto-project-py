@@ -19,4 +19,4 @@ class GitHubManagerForm(npyscreen.Form):
 
     def return_to_main(self):
         """Regresar al menú principal."""
-        self.parentApp.setNextForm("MAIN")
+        self.parentApp.switchForm("MAIN")
