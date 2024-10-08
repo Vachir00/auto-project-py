@@ -1,6 +1,6 @@
 # pages/docker-manager/docker_ui.py
 import npyscreen
-from pages.docker import docker_manager as dm
+from pages.docker.docker_manager import DockerContainers
 
 class DockerManagerForm(npyscreen.FormBaseNew):
     """Menú de gestión de contenedores Docker."""
@@ -39,7 +39,7 @@ class DockerManagerForm(npyscreen.FormBaseNew):
                                     max_height=y-10)
 
         # Obtener y formatear los datos de los contenedores
-        containers = dm.list_containers(all=True)
+        containers = DockerContainers().list_containers(all=True)
         header_row = "  ".join(f"{h:<{w}}" for h, w in zip(headers, max_widths))
         container_rows = []
         for c in containers:
@@ -48,7 +48,7 @@ class DockerManagerForm(npyscreen.FormBaseNew):
                 c['Name'][:max_widths[1]]
             ]
             container_rows.append("  ".join(f"{col:<{w}}" for col, w in zip(row, max_widths)))
-
+        
         # Asignar los valores al Box de Resultados
         self.results_box.values = ["", header_row] + container_rows
         self.results_box.entry_widget.set_editable(False)
@@ -65,11 +65,10 @@ class DockerManagerForm(npyscreen.FormBaseNew):
             selected_index = widget.cursor_line - 2  # Restar 2 para compensar las filas de encabezado
             if selected_index >= 0 and selected_index < len(containers):
                 container_id = containers[selected_index]['containerID']
-                inspect_data = dm.get_container_inspect(container_id)
-                self.show_container_details(inspect_data)
+                self.show_container_details(container_id)
 
         # Conectar la función de selección al widget
-        self.results_box.entry_widget.when_value_edited = on_selection
+        self.results_box.entry_widget.when_cursor_moved = on_selection
 
     def skip_headers(self, widget=None):
         """Evitar que el cursor seleccione las filas de encabezado o vacías."""
@@ -79,16 +78,15 @@ class DockerManagerForm(npyscreen.FormBaseNew):
             widget.cursor_line = 2  # Mover el cursor a la primera fila de datos
         widget.display()
 
-    def show_container_details(self, inspect_data):
+    def show_container_details(self, container_id):
         """Mostrar detalles del contenedor en el Box de Detalles."""
-        details = []
-        for key, value in inspect_data.items():
-            if isinstance(value, (dict, list)):
-                details.append(f"{key}: {str(value)[:50]}...")
-            else:
-                details.append(f"{key}: {value}")
-
-        self.details_box.values = details
+        # Obtener el archivo inspect del contenedor seleccionado
+        # Archivo se guarda en ./tempdata/inspect_<container_id>.txt
+        # Leer el archivo y mostrar los detalles en el Box de Detalles
+        file_path = f"./tempdata/inspect_{container_id}.txt"
+        with open(file_path, 'r') as file:
+            inspect_data = file.read()
+        self.details_box.values = inspect_data.split('\n')
         self.details_box.display()
 
     def return_to_main(self):

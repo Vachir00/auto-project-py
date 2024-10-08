@@ -16,6 +16,9 @@ oldDelete/
 # C extensions
 *.so
 
+# tempdata
+tempdata/*
+
 # Distribution / packaging
 .Python
 build/
